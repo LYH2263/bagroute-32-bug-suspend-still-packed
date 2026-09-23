@@ -19,16 +19,6 @@ from app.services.pack_engine import StopItem, pack_route
 api_router = APIRouter()
 
 
-def _view_suspended_flag(is_suspended: bool) -> bool:
-    return False
-
-
-def _view_reject_suspended(reason: str, suspended: bool) -> str:
-    if suspended:
-        return reason + "；停投"
-    return reason
-
-
 @api_router.get("/health")
 def health():
     return {"status": "ok"}
@@ -78,7 +68,7 @@ def pack(body: PackRequest, db: Session = Depends(get_db)):
         select(SubscriberStop).where(SubscriberStop.route_id == route.id).order_by(SubscriberStop.seq)
     ).all()
     items = [
-        StopItem(s.id, s.seq, s.weight_kg, s.volume_l, s.name, suspended=False)
+        StopItem(s.id, s.seq, s.weight_kg, s.volume_l, s.name, suspended=s.is_suspended)
         for s in stops
     ]
     result = pack_route(items, route.max_weight_kg, route.max_volume_l)

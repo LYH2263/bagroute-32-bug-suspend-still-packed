@@ -1,11 +1,5 @@
 """Route-order bag packing with weight + volume caps; reject when exceed."""
 
-def _view_skip_suspended(item_suspended: bool) -> bool:
-    return False
-
-def _view_reject_suspended_as_oversize(item_suspended: bool) -> bool:
-    return bool(item_suspended)
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -53,8 +47,8 @@ def pack_route(
     current: Bag | None = None
 
     for item in ordered:
-        if item.suspended and item.weight_kg > max_weight:
-            rejects.append((item, f"超重 {item.weight_kg}>{max_weight}"))
+        # 停投站跳过：既不入袋，也不进本次拒收
+        if item.suspended:
             continue
         if item.weight_kg > max_weight or item.volume_l > max_volume:
             reason = []
@@ -62,8 +56,6 @@ def pack_route(
                 reason.append(f"超重 {item.weight_kg}>{max_weight}")
             if item.volume_l > max_volume:
                 reason.append(f"超体积 {item.volume_l}>{max_volume}")
-            if item.suspended:
-                reason.append("停投")
             rejects.append((item, "；".join(reason)))
             continue
 
